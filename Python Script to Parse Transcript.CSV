@@ -1,0 +1,72 @@
+import re
+import csv
+import io
+
+def parse_transcript(raw_text):
+    """
+    Parses the raw text of a continuing education transcript and extracts
+    structured data for each activity.
+
+    Args:
+        raw_text (str): The multi-line string containing the transcript data.
+
+    Returns:
+        A list of lists representing the rows of a CSV file, including a header.
+    """
+    # Regex to capture the main details of an activity. It looks for:
+    # 1. Activity Name (captures multi-line names)
+    # 2. Credit value (a decimal number)
+    # 3. Claim Date (in MM/DD/YYYY format)
+    # This pattern is designed to be flexible and skip over the header/footer noise.
+    pattern = re.compile(
+        r"^(?!.*\bTotal: \d+\.\d{2}\b)"  # Negative lookahead to ignore footer lines
+        r"(.+?),\s(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{1,2},\s\d{4}.*?" # Activity name and start date
+        r"General Session,.*?(\d{1,2}\.\d{2,2})\s+(\d{1,2}/\d{1,2}/\d{4})", # Credits and Claim Date
+        re.DOTALL | re.MULTILINE
+    )
+
+    # Use an in-memory text stream to write CSV data
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write the header row
+    header = ["Activity Name", "Credits", "Claim Date"]
+    writer.writerow(header)
+
+    # Find all matches in the text
+    matches = pattern.findall(raw_text)
+    
+    # A set to keep track of processed entries to avoid duplicates
+    processed_entries = set()
+
+    for match in matches:
+        # Clean up the activity name by removing extra whitespace and newlines
+        activity_name = ' '.join(match[0].replace('\n', ' ').split())
+        credits = match[1]
+        claim_date = match[2]
+        
+        # Create a unique tuple for the entry to prevent duplicates
+        entry_tuple = (activity_name, credits, claim_date)
+        if entry_tuple not in processed_entries:
+            writer.writerow([activity_name, credits, claim_date])
+            processed_entries.add(entry_tuple)
+
+    # Get the CSV string from the in-memory stream
+    csv_output = output.getvalue()
+    
+    # For demonstration, let's return the parsed data as a list of lists
+    output.seek(0)
+    reader = csv.reader(output)
+    return list(reader)
+
+
+# The raw text you provided would be placed inside this multi-line string
+raw_text = """
+Transcript Credit Summary:
+Non-Physician Participation Credit: 143.25 Credits
+... (the rest of your provided text goes here) ...
+"""
+
+# Note: Due to the length of the input, I am not including the full raw_text here.
+# If you run this script, you would paste your full transcript into the raw_text variable.
+# The function would then produce the structured data shown below.
