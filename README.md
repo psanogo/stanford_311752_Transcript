@@ -1,5 +1,5 @@
 # Professional Development Transcript Summary
-
+https://www.skills.google/paths/2268
 This document provides a summary of the continuing education activities completed by Papa M. Sanogo, as detailed in the official transcript from the Stanford Center for Continuing Medical Education.
 
 ## Overview
